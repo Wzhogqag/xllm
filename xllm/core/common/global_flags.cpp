@@ -459,6 +459,23 @@ DEFINE_int64(
     "Granularity size for one physical page in bytes, default 2MB, when enable "
     "continuous kv cache.");
 
+// --- vmm map/unmap profiling (experiment only) ---
+
+DEFINE_bool(enable_map_unmap_profiling,
+            false,
+            "Experiment only. Aggregate count and per-call latency of VMM "
+            "map/unmap driver calls (aclrtMapMem/aclrtUnmapMem).");
+
+DEFINE_string(map_unmap_profiling_dir,
+              "",
+              "Directory to write map_unmap_summary.json. Empty means current "
+              "working directory. Only used when enable_map_unmap_profiling.");
+
+DEFINE_int32(map_unmap_profiling_flush_ms,
+             500,
+             "How often (ms) the background thread overwrites "
+             "map_unmap_summary.json.");
+
 // --- beam search config ---
 
 DEFINE_bool(enable_beam_search_kernel,

@@ -17,12 +17,43 @@ limitations under the License.
 
 #include <glog/logging.h>
 
+#include <chrono>
 #include <cstdint>
 
 #include "common/global_flags.h"
+#include "map_unmap_profiler.h"
 
 namespace xllm {
 namespace vmm {
+
+namespace {
+// RAII timer that records elapsed time into the profiler on scope exit,
+// covering all return paths (e.g. the NPU early return in unmap). Cheap when
+// profiling is disabled: one bool check and no clock read.
+class ScopedProfile {
+ public:
+  explicit ScopedProfile(MapUnmapProfiler::Op op)
+      : enabled_(MapUnmapProfiler::instance().enabled()), op_(op) {
+    if (enabled_) {
+      start_ = std::chrono::steady_clock::now();
+    }
+  }
+  ~ScopedProfile() {
+    if (!enabled_) {
+      return;
+    }
+    const auto elapsed = std::chrono::steady_clock::now() - start_;
+    const uint64_t ns =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(elapsed).count();
+    MapUnmapProfiler::instance().record(op_, ns);
+  }
+
+ private:
+  bool enabled_;
+  MapUnmapProfiler::Op op_;
+  std::chrono::steady_clock::time_point start_;
+};
+}  // namespace
 
 size_t get_recommended_granularity(int32_t device_id) {
   size_t granularity_size = 0;
@@ -174,6 +205,7 @@ void map(VirPtr& vir_ptr,
          PhyMemHandle& phy_mem_handle,
          size_t granularity_size,
          int32_t device_id) {
+  ScopedProfile prof(MapUnmapProfiler::Op::kMap);
   int ret = 0;
 #if defined(USE_NPU)
   ret = aclrtMapMem(vir_ptr, granularity_size, 0, phy_mem_handle, 0);
@@ -212,6 +244,7 @@ void map(VirPtr& vir_ptr,
 }
 
 void unmap(VirPtr& vir_ptr, size_t aligned_size) {
+  ScopedProfile prof(MapUnmapProfiler::Op::kUnmap);
 #if defined(USE_NPU)
   // For NPU, `aclrtUnmapMem` unmaps the range previously mapped by
   // `aclrtMapMem` at the given virtual address. Since we map per-physical-page

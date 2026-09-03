@@ -33,8 +33,8 @@ limitations under the License.
 #include "distributed_runtime/engine.h"
 #include "framework/batch/batch_factory.h"
 #include "framework/request/priority_comparator.h"
-#include "framework/request/request_metric_aggregator.h"
 #include "framework/request/request.h"
+#include "framework/request/request_metric_aggregator.h"
 #include "framework/request/sequence.h"
 #include "scheduler/decode_priority_queue.h"
 #include "util/utils.h"
@@ -500,8 +500,8 @@ void ContinuousScheduler::handle_decode_requests(
         // TO IMPROVE: kv cache offload to cpu
         LOG(WARNING) << "[SCHED_PREEMPT] type=decode_preempt_in_same_queue"
                      << " trigger_request_id=" << request->request_id()
-                     << " victim_request_id=" << request_to_preempt->request_id()
-                     << " kv_utilization="
+                     << " victim_request_id="
+                     << request_to_preempt->request_id() << " kv_utilization="
                      << kv_cache_manager_->kv_cache_utilization();
         kv_cache_manager_->deallocate(request_to_preempt.get());
         running_queue->pop_back();
@@ -771,10 +771,10 @@ std::vector<Batch> ContinuousScheduler::prepare_batch() {
         }
         return decode_ready_sequences;
       };
-  const size_t decode_ready_seq_budget = std::min(
-      total_seq_budget,
-      count_decode_ready_sequences(running_queue_) +
-          count_decode_ready_sequences(running_queue_offline_));
+  const size_t decode_ready_seq_budget =
+      std::min(total_seq_budget,
+               count_decode_ready_sequences(running_queue_) +
+                   count_decode_ready_sequences(running_queue_offline_));
   // Reserve sequence budget for decode-ready sequences first, then schedule
   // prefill with the remaining budget.
   size_t remaining_seq_budget = total_seq_budget - decode_ready_seq_budget;
@@ -1036,34 +1036,30 @@ void ContinuousScheduler::update_token_latency_metrics(
           static_cast<double>(tbt_milliseconds) / 1000);
       model_step_metrics[*model_iter->second].emplace_back(
           "ttft:" + std::to_string(tbt_milliseconds));
-      RequestMetricAggregator::instance().add_sample(*model_iter->second,
-                                                     tbt_milliseconds,
-                                                     0.0,
-                                                     true,
-                                                     false);
+      RequestMetricAggregator::instance().add_sample(
+          *model_iter->second, tbt_milliseconds, 0.0, true, false);
     } else {
       HISTOGRAM_OBSERVE(inter_token_latency_milliseconds, tbt_milliseconds);
       model_step_metrics[*model_iter->second].emplace_back(
           "itl:" + std::to_string(tbt_milliseconds));
-      RequestMetricAggregator::instance().add_sample(*model_iter->second,
-                                                     0.0,
-                                                     tbt_milliseconds,
-                                                     false,
-                                                     true);
+      RequestMetricAggregator::instance().add_sample(
+          *model_iter->second, 0.0, tbt_milliseconds, false, true);
     }
   }
 
-  for (const auto& [model_id, metrics] : model_step_metrics) {
-    std::ostringstream oss;
-    oss << "[token latency step] model_id=" << model_id << ", values=[";
-    for (size_t i = 0; i < metrics.size(); ++i) {
-      if (i != 0) {
-        oss << ", ";
+  if (VLOG_IS_ON(1)) {
+    for (const auto& [model_id, metrics] : model_step_metrics) {
+      std::ostringstream oss;
+      oss << "[token latency step] model_id=" << model_id << ", values=[";
+      for (size_t i = 0; i < metrics.size(); ++i) {
+        if (i != 0) {
+          oss << ", ";
+        }
+        oss << metrics[i];
       }
-      oss << metrics[i];
+      oss << "]";
+      VLOG(1) << oss.str();
     }
-    oss << "]";
-    LOG(INFO) << oss.str();
   }
 }
 

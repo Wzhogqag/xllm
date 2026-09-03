@@ -220,6 +220,11 @@ DECLARE_int32(global_xtensor_map_rate);
 
 DECLARE_int64(phy_page_granularity_size);
 
+// --- vmm map/unmap profiling (experiment only) ---
+DECLARE_bool(enable_map_unmap_profiling);
+DECLARE_string(map_unmap_profiling_dir);
+DECLARE_int32(map_unmap_profiling_flush_ms);
+
 // --- beam search config ---
 DECLARE_bool(enable_beam_search_kernel);
 

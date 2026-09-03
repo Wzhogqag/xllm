@@ -12,12 +12,14 @@ cc_library(
     stream.h
     device.h
     vmm_api.h
+    map_unmap_profiler.h
     shared_vmm_allocator.h
     vmm_torch_allocator.h
   SRCS
     stream.cpp
     device.cpp
     vmm_api.cpp
+    map_unmap_profiler.cpp
     shared_vmm_allocator.cpp
   DEPS
     torch
