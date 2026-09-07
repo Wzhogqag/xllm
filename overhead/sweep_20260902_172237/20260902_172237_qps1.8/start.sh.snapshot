@@ -1,0 +1,11 @@
+# QPS=1.8 phy=6 model=/export/home/models/Qwen3-14B ts=20260902_172237
+ASCEND_RT_VISIBLE_DEVICES=6 NPU_PHY_ID=6 \
+./build/xllm/core/server/xllm --model /export/home/models/Qwen3-14B --devices=npu:0 --port 13212 \
+  --master_node_addr=127.0.0.1:9929 --nnodes=1 \
+  --max_memory_utilization=0.86 --max_tokens_per_batch=16184 --max_seqs_per_batch=256 \
+  --enable_mla=false --block_size=128 --dp_size=1 --enable_xtensor=true \
+  --npu_phy_id=6 --transfer_listen_port=25550 --communication_backend=hccl \
+  --enable_prefix_cache=true --enable_chunked_prefill=true --enable_schedule_overlap=false \
+  --xtensor_master_node_addr=127.0.0.1:15534 --priority_level=3 --priority_window_size=1000 \
+  --host_blocks_factor=1 --kv_cache_transfer_mode=PULL --node_rank=0 \
+  --enable_map_unmap_profiling=true --map_unmap_profiling_dir=${REPO_ROOT}/overhead/sweep_20260902_172237/20260902_172237_qps1.8 --map_unmap_profiling_flush_ms=500

@@ -1,0 +1,1 @@
+I20260902 17:23:22.125260 1315704 llm_engine.cpp:1100] XTensor mode: available memory from PhyPagePool: 52.29 GB (pages: 26775, page_size: 2097152)
