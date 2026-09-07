@@ -16,13 +16,14 @@
 set -u
 
 # ------------------------- config -------------------------
-REPO="/export/home/weizhongqiang.3/xllm-multimodel"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO" || exit 1
 
 MODEL_PATH="/export/home/models/Qwen3-14B"
 MODEL_NAME="Qwen3-14B"
 XLLM_BIN="./build/xllm/core/server/xllm"
-SENDER="$REPO/sender.py"
+SENDER="$REPO/overhead/sender.py"
 TRACE_CSV="$REPO/trace_1_100.csv"
 
 QPS_LIST="${QPS_LIST:-1 1.5 2 2.5 3}"
